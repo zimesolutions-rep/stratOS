@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+/* Brand fonts, same files as zimesolutions.com myHR and DealGuard (OFL licences in public/fonts). */
+@font-face { font-family: "Sora"; src: url("/fonts/Sora-Variable.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "DM Sans"; src: url("/fonts/DMSans-Variable.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("/fonts/IBMPlexMono-Medium.ttf") format("truetype"); font-weight: 500; font-display: swap; }
+
+/*
+ * Design tokens. Zime brand purple for actions (as on zimesolutions.com myHR and DealGuard), deep slate
+ * (#0F172A / #1E293B) for the command bar, hero and headings. Components use only these tokens,
+ * so the dark scale below flips the whole portal.
+ */
+:root {
+  --canvas: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --ink: #0f172a;
+  --ink-2: #334155;
+  --ink-3: #64748b;
+  --brand: #7a2edb;
+  --brand-strong: #5b1fb0;
+  --brand-soft: #f1eaff;
+  --chrome: #0f172a;      /* command bar + hero */
+  --chrome-2: #1e293b;
+  --chrome-ink: #e2e8f0;
+  --chrome-muted: #94a3b8;
+  --ok: #11674f;   --ok-soft: #e3f4ee;
+  --warn: #8a4b00; --warn-soft: #fff1dd;
+  --bad: #a1262c;  --bad-soft: #fbe7e8;
+  --info: #1d4f86; --info-soft: #e3eef9;
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --font-heading: "Sora", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+  --font-label: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+
+/* One light theme across the Zime apps; the dark scale was removed on purpose. */
+
+@theme inline {
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+  --font-mono: var(--font-label);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-chrome: var(--chrome);
+  --color-chrome-2: var(--chrome-2);
+  --color-chrome-ink: var(--chrome-ink);
+  --color-chrome-muted: var(--chrome-muted);
+  --color-ok: var(--ok);     --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn); --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);   --color-bad-soft: var(--bad-soft);
+  --color-info: var(--info); --color-info-soft: var(--info-soft);
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { font-family: var(--font-heading); text-wrap: pretty; letter-spacing: -0.02em; }
+::selection { background: #e8d9ff; color: #0f172a; }
+:focus-visible { outline: 3px solid #aa7af0; outline-offset: 2px; }
+input[type="checkbox"] { accent-color: var(--brand); width: 16px; height: 16px; }
+
+@layer components {
+  .card { @apply rounded-[18px] border border-line bg-surface p-4 sm:p-6; box-shadow: var(--shadow); }
+  a.card { @apply transition; }
+  a.card:hover { transform: translateY(-2px); border-color: var(--line-strong); box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1); }
+
+  .btn, .btn-secondary, .btn-ghost {
+    @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-bold whitespace-nowrap transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn { background: var(--brand); color: #fff; border: 1px solid var(--brand); }
+  .btn:hover:not(:disabled) { filter: brightness(0.9); }
+  .btn-secondary { border: 1.5px solid var(--ink); color: var(--ink); background: var(--surface); }
+  .btn-secondary:hover:not(:disabled) { background: var(--surface-2); }
+  .btn-ghost { color: var(--ink-2); }
+  .btn-ghost:hover { background: var(--surface-2); }
+
+  .input {
+    @apply block w-full rounded-[10px] border bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-ink-3;
+    border-color: var(--line-strong);
+  }
+  .input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent); }
+  .input[aria-invalid="true"] { border-color: var(--bad); }
+  .label { @apply mb-1.5 block text-sm font-medium text-ink-2; }
+  .hint { @apply mt-1 text-xs text-ink-3; }
+  .field-error { @apply mt-1 text-xs font-medium text-bad; }
+
+  .eyebrow { color: var(--brand); font: 500 12px/1.4 var(--font-label); letter-spacing: 0.06em; text-transform: uppercase; }
+  .table { @apply w-full text-left text-sm text-ink-2; }
+  .table th { @apply border-b border-line px-3 py-2.5 text-ink-3; font: 500 11px/1.4 var(--font-label); letter-spacing: 0.06em; text-transform: uppercase; }
+  .table td { @apply border-b border-line px-3 py-3 align-top; }
+  .table tbody tr:hover td { background: var(--surface-2); }
+  .h1 { @apply text-3xl font-extrabold text-ink; font-family: var(--font-heading); }
+  .h2 { @apply mb-3 text-lg font-bold text-ink; font-family: var(--font-heading); }
+}
