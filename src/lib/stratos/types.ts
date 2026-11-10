@@ -17,10 +17,10 @@ export const ROLE_LABEL: Record<MemberRole, string> = {
 export const canWrite = (r: MemberRole) => r !== "viewer";
 export const isAdminRole = (r: MemberRole) => r === "owner" || r === "admin";
 
-export const LEAD_SOURCES = ["facebook_lead_ads", "instagram_lead_ads", "google_my_business", "website_form", "whatsapp", "telecmi", "referral", "manual", "api"] as const;
+export const LEAD_SOURCES = ["facebook_lead_ads", "instagram_lead_ads", "google_my_business", "google_ads_lead_form", "website_form", "whatsapp", "telecmi", "referral", "manual", "api"] as const;
 export type LeadSource = (typeof LEAD_SOURCES)[number];
 export const SOURCE_LABEL: Record<LeadSource, string> = {
-  facebook_lead_ads: "Facebook Lead Ads", instagram_lead_ads: "Instagram Lead Ads", google_my_business: "Google Business",
+  facebook_lead_ads: "Facebook Lead Ads", instagram_lead_ads: "Instagram Lead Ads", google_my_business: "Google Business", google_ads_lead_form: "Google Ads lead form",
   website_form: "Website form", whatsapp: "WhatsApp", telecmi: "Phone call", referral: "Referral", manual: "Added by hand", api: "API",
 };
 

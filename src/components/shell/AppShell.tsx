@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
-import { IconClose, IconCollapse, IconDashboard, IconExpand, IconLeads, IconMenu, IconPipeline, IconPlus, IconSettings } from "@/components/Icons";
+import { IconClose, IconCollapse, IconDashboard, IconExpand, IconGauge, IconInboundTray, IconLeads, IconMenu, IconPipeline, IconPlus, IconSettings } from "@/components/Icons";
 import { ADMIN_NAV, NAV, type NavItem } from "./nav";
 import { LiveClock } from "./LiveClock";
 import { ProfileMenu } from "./ProfileMenu";
 import { TenantSwitcher, type TenantOption } from "./TenantSwitcher";
 
-const ICONS = { dashboard: IconDashboard, leads: IconLeads, pipeline: IconPipeline, new: IconPlus, settings: IconSettings };
+const ICONS = { dashboard: IconDashboard, leads: IconLeads, pipeline: IconPipeline, new: IconPlus, settings: IconSettings, sources: IconInboundTray, scoring: IconGauge };
 const STORAGE_KEY = "stratos.sidebar.collapsed";
 
 export type ShellUser = {
@@ -39,9 +39,9 @@ export function AppShell({ user, signOut, switchTenant, children }: {
     return !c;
   });
 
-  // "Leads" stays lit on a lead's page, but not on /leads/new (the New lead button covers that).
+  // "Leads" stays lit on a lead's page but not on /leads/new; "Settings" only on its own page, not its sub-pages.
   const isActive = (item: NavItem) => path === item.href
-    || (path.startsWith(`${item.href}/`) && !(item.exact && path === `${item.href}/new`));
+    || (path.startsWith(`${item.href}/`) && !(item.exact && (path === `${item.href}/new` || item.href === "/settings")));
 
   const nav = (compact: boolean) => (
     <nav aria-label="Main" className="flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-4">
