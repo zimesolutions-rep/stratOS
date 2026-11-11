@@ -22,11 +22,18 @@ export function pool(): Pool {
 
 export type Db = Pick<PoolClient, "query">;
 
-async function transaction<T>(setup: (c: PoolClient) => Promise<unknown>, fn: (db: Db) => Promise<T>): Promise<T> {
+/**
+ * Every statement is a round trip to Neon, and on a cross-region hop each one costs real time, so the transaction
+ * opens and sets its context in ONE simple-protocol message: "begin; select set_config(...)". Values go in as
+ * escaped literals because a multi-statement message can't carry bind parameters.
+ */
+async function transaction<T>(setup: Record<string, string> | null, fn: (db: Db) => Promise<T>): Promise<T> {
   const client = await pool().connect();
   try {
-    await client.query("begin");
-    await setup(client);
+    const sets = setup
+      ? Object.entries(setup).map(([k, v]) => `set_config(${client.escapeLiteral(k)}, ${client.escapeLiteral(v)}, true)`)
+      : [];
+    await client.query(sets.length ? `begin; select ${sets.join(", ")}` : "begin");
     const result = await fn(client);
     await client.query("commit");
     return result;
@@ -39,18 +46,15 @@ async function transaction<T>(setup: (c: PoolClient) => Promise<unknown>, fn: (d
 }
 
 /**
- * Run queries as a signed-in user inside one tenant. The transaction switches to the stratos_app role and sets
- * app.user_id and app.tenant_id; stratos.current_tenant_id() only honours the tenant if the user is an active
- * member, so every statement is filtered by the RLS policies in db/migrations.
+ * Run queries as a signed-in user inside one tenant. The transaction switches to the stratos_app role (setting the
+ * "role" GUC locally is SET LOCAL ROLE) and sets app.user_id and app.tenant_id; stratos.current_tenant_id() only
+ * honours the tenant if the user is an active member, so every statement is filtered by the RLS policies.
  */
 export function asTenantUser<T>(userId: string, tenantId: string | null, fn: (db: Db) => Promise<T>) {
-  return transaction(async (c) => {
-    await c.query("set local role stratos_app");
-    await c.query("select set_config('app.user_id', $1, true), set_config('app.tenant_id', $2, true)", [userId, tenantId ?? ""]);
-  }, fn);
+  return transaction({ role: "stratos_app", "app.user_id": userId, "app.tenant_id": tenantId ?? "" }, fn);
 }
 
 /** Trusted server path (owner, no RLS). Only for webhooks, cron workers and auth bootstrap. Always filter by tenant_id. */
 export function asService<T>(fn: (db: Db) => Promise<T>) {
-  return transaction(async () => {}, fn);
+  return transaction(null, fn);
 }

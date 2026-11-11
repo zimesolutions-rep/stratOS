@@ -24,24 +24,27 @@ export type Me = {
   db: <T>(fn: (db: Db) => Promise<T>) => Promise<T>;
 };
 
-async function memberships(userId: string): Promise<Membership[]> {
-  return asTenantUser(userId, null, async (db) => (await db.query<Membership>(
-    `select m.tenant_id, t.name as tenant_name, t.slug, m.role
-       from stratos.tenant_members m join stratos.tenants t on t.id = m.tenant_id
-      where m.user_id = $1 and m.active
-      order by t.name`, [userId])).rows);
-}
-
 async function resolve(userId: string): Promise<Omit<Me, "email" | "name"> | null> {
-  const list = await memberships(userId);
-  if (!list.length) return null;
   const picked = (await cookies()).get(TENANT_COOKIE)?.value;
-  const m = list.find((x) => x.tenant_id === picked) ?? list[0];
+  // One transaction for both reads: list the memberships, then switch to the picked tenant and load it.
+  const found = await asTenantUser(userId, null, async (q) => {
+    const list = (await q.query<Membership>(
+      `select m.tenant_id, t.name as tenant_name, t.slug, m.role
+         from stratos.tenant_members m join stratos.tenants t on t.id = m.tenant_id
+        where m.user_id = $1 and m.active
+        order by t.name`, [userId])).rows;
+    if (!list.length) return null;
+    const m = list.find((x) => x.tenant_id === picked) ?? list[0];
+    await q.query("select set_config('app.tenant_id', $1, true)", [m.tenant_id]);
+    const tenant = (await q.query<Tenant>(
+      `select id, name, slug, industry, compliance_regimes, customer_markets, data_region, default_currency, timezone,
+              retention_days
+         from stratos.tenants where id = stratos.current_tenant_id()`)).rows[0];
+    return tenant ? { list, m, tenant } : null;
+  });
+  if (!found) return null;
+  const { list, m, tenant } = found;
   const db: Me["db"] = (fn) => asTenantUser(userId, m.tenant_id, fn);
-  const tenant = await db(async (q) => (await q.query<Tenant>(
-    `select id, name, slug, industry, compliance_regimes, customer_markets, data_region, default_currency, timezone, retention_days
-       from stratos.tenants where id = stratos.current_tenant_id()`)).rows[0]);
-  if (!tenant) return null;
   return { userId, tenant, role: m.role, memberships: list, canWrite: canWrite(m.role), isAdmin: isAdminRole(m.role), db };
 }
 
