@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
-import { INDUSTRY_LABEL, REGIME_LABEL, ROLE_LABEL, type MemberRole } from "@/lib/stratos/types";
+import { INDUSTRY_LABEL, MARKET_LABEL, REGIME_LABEL, ROLE_LABEL, type MemberRole } from "@/lib/stratos/types";
 import { getMe } from "@/lib/tenant";
 import { listStages } from "@/lib/leads/repo";
 
 export const metadata = { title: "Settings" };
+
+const HOSTING = { in: "India (Mumbai)", eu: "European Union", us: "United States" } as const;
 
 const RULE_LABEL = (k: string) => k.startsWith("source:") ? `Starting score: ${k.slice(7).replace(/_/g, " ")}` : k.replace(/_/g, " ");
 
@@ -34,8 +36,9 @@ export default async function SettingsPage() {
           <h2 className="h2">Workspace</h2>
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             {([["Name", t.name], ["Address", t.slug], ["Industry", INDUSTRY_LABEL[t.industry]],
-               ["Data protection", t.compliance_regimes.map((r) => REGIME_LABEL[r]).join(", ")],
-               ["Region", t.data_region.toUpperCase()], ["Currency", t.default_currency],
+               ["Customers in", t.customer_markets.map((m) => MARKET_LABEL[m]).join(", ")],
+               ["Privacy laws", t.compliance_regimes.map((r) => REGIME_LABEL[r]).join(", ")],
+               ["Data hosted in", HOSTING[t.data_region]], ["Currency", t.default_currency],
                ["Retention", t.retention_days ? `${t.retention_days} days after a lead closes` : "Until erasure is requested"]] as const)
               .map(([k, v]) => <div key={k}><dt className="text-xs text-ink-3">{k}</dt><dd className="font-medium text-ink">{v}</dd></div>)}
           </dl>

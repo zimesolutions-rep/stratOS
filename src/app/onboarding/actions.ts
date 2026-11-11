@@ -6,7 +6,7 @@ import { z } from "zod";
 import { actionError } from "@/lib/api";
 import { currentUserId } from "@/lib/auth/current-user";
 import { asTenantUser } from "@/lib/db";
-import { INDUSTRIES, REGIMES } from "@/lib/stratos/types";
+import { INDUSTRIES, MARKETS, REGIMES } from "@/lib/stratos/types";
 import { TENANT_COOKIE } from "@/lib/tenant";
 
 export type OnboardingState = { error?: string };
@@ -16,7 +16,7 @@ const input = z.object({
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9][a-z0-9-]{1,46}[a-z0-9]$/, "Use 3 to 48 lowercase letters, digits or hyphens"),
   industry: z.enum(INDUSTRIES, "Pick your industry"),
   regimes: z.array(z.enum(REGIMES)).min(1, "Pick at least one data protection law"),
-  region: z.enum(["in", "eu", "us"]),
+  markets: z.array(z.enum(MARKETS)).min(1, "Pick where your customers are"),
 });
 
 /**
@@ -30,11 +30,11 @@ export async function createWorkspace(_prev: OnboardingState, form: FormData): P
   try {
     const v = input.parse({
       name: form.get("name"), slug: form.get("slug"), industry: form.get("industry"),
-      regimes: form.getAll("regimes"), region: form.get("region"),
+      regimes: form.getAll("regimes"), markets: form.getAll("markets"),
     });
     id = await asTenantUser(userId, null, async (db) => (await db.query<{ id: string }>(
-      "select stratos.create_tenant($1, $2, $3::stratos.industry, $4::text[], $5) as id",
-      [v.name, v.slug, v.industry, v.regimes, v.region])).rows[0].id);
+      "select stratos.create_tenant($1, $2, $3::stratos.industry, $4::text[], $5::text[]) as id",
+      [v.name, v.slug, v.industry, v.regimes, v.markets])).rows[0].id);
   } catch (err) {
     const e = err as { code?: string; constraint?: string };
     if (e?.code === "23505") return { error: "That workspace address is taken. Try another." };

@@ -1,5 +1,5 @@
 -- StratOS checks: tenant isolation, roles, column guards, scoring, cadence stop/resume, worker, erasure.
--- Fails loudly on the first broken expectation. Run after 0001_auth.sql and 0002_stratos_core.sql.
+-- Fails loudly on the first broken expectation. Run after all migrations.
 \set ON_ERROR_STOP 1
 
 insert into "user" (id, name, email, "emailVerified") values
@@ -158,5 +158,16 @@ select pg_temp.expect((select status = 'done' and lead_id is null and length(sub
                       'erasure proof kept without PII');
 
 select pg_temp.expect(stratos.queue_retention_purges() = 0, 'retention purge runs (no tenant has retention set)');
+
+-- Workspaces can serve many markets and declare their laws; unknown values are refused.
+insert into "user" (id, name, email, "emailVerified") values ('u-c-owner', 'C Owner', 'owner@c.test', true);
+begin;
+select pg_temp.as_user('u-c-owner');
+create temp table tc as select stratos.create_tenant('Gamma', 'gamma', 'tech_support', '{ccpa,gdpr,uae_pdpl}', '{us,eu,me}') as id;
+select pg_temp.fails($$select stratos.create_tenant('Delta', 'delta', 'tech_support', '{dpdp}', '{mars}')$$, 'unknown market refused');
+select pg_temp.fails($$select stratos.create_tenant('Delta', 'delta', 'tech_support', '{dpdp}', '{}')$$, 'at least one market');
+commit;
+select pg_temp.expect((select customer_markets = '{us,eu,me}' and compliance_regimes = '{ccpa,gdpr,uae_pdpl}'
+                       from stratos.tenants where id = (select id from tc)), 'tenant keeps several markets and laws');
 
 \echo 'All StratOS checks passed'

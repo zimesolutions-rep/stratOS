@@ -33,13 +33,30 @@ export const CONSENT_LABEL: Record<ConsentStatus, string> = {
   unknown: "Not recorded", granted: "Granted", withdrawn: "Withdrawn", erasure_requested: "Erasure requested",
 };
 
-export const REGIMES = ["dpdp", "gdpr", "hipaa"] as const;
+/** Privacy laws a workspace can declare. HIPAA also turns on strict masking of health details before AI calls. */
+export const REGIMES = ["dpdp", "gdpr", "uk_gdpr", "ccpa", "hipaa", "uae_pdpl", "ksa_pdpl", "au_privacy", "pdpa_sg"] as const;
 export type Regime = (typeof REGIMES)[number];
-export const REGIME_LABEL: Record<Regime, string> = { dpdp: "DPDP (India)", gdpr: "GDPR (EU)", hipaa: "HIPAA (US)" };
+export const REGIME_LABEL: Record<Regime, string> = {
+  dpdp: "DPDP Act (India)", gdpr: "GDPR (EU)", uk_gdpr: "UK GDPR", ccpa: "CCPA / CPRA (California)",
+  hipaa: "HIPAA (US health data)", uae_pdpl: "PDPL (UAE)", ksa_pdpl: "PDPL (Saudi Arabia)",
+  au_privacy: "Privacy Act (Australia)", pdpa_sg: "PDPA (Singapore)",
+};
+
+/** Where a workspace's customers are. Picking a market suggests its privacy laws; health data adds HIPAA by hand. */
+export const MARKETS = ["in", "us", "eu", "uk", "me", "au", "sea", "other"] as const;
+export type Market = (typeof MARKETS)[number];
+export const MARKET_LABEL: Record<Market, string> = {
+  in: "India", us: "United States", eu: "European Union", uk: "United Kingdom", me: "Middle East (UAE, Saudi Arabia)",
+  au: "Australia", sea: "Singapore and South-East Asia", other: "Elsewhere",
+};
+export const MARKET_REGIMES: Record<Market, Regime[]> = {
+  in: ["dpdp"], us: ["ccpa"], eu: ["gdpr"], uk: ["uk_gdpr"], me: ["uae_pdpl", "ksa_pdpl"], au: ["au_privacy"],
+  sea: ["pdpa_sg"], other: [],
+};
 
 export type Tenant = {
-  id: string; name: string; slug: string; industry: Industry; compliance_regimes: Regime[]; data_region: "in" | "eu" | "us";
-  default_currency: string; timezone: string; retention_days: number | null;
+  id: string; name: string; slug: string; industry: Industry; compliance_regimes: Regime[]; customer_markets: Market[];
+  data_region: "in" | "eu" | "us"; default_currency: string; timezone: string; retention_days: number | null;
 };
 export type Membership = { tenant_id: string; tenant_name: string; slug: string; role: MemberRole };
 
