@@ -26,7 +26,20 @@ transactions, API error shape and SQL test style. No ORM and no component librar
 - `src/lib/pii/mask.ts`: masking for logs and AI calls (email, phone, Aadhaar, PAN, UPI, IBAN, card, SSN, URL tokens;
   dates of birth and MRNs in strict / HIPAA mode).
 
-Next: lead-source webhooks and scoring (Step 2), TeleCMI and call sentiment (Step 3), the cadence worker (Step 4) and
+## Lead sources and scoring (Step 2)
+
+- `POST /api/v1/webhooks/inbound/website?t=<key>`: JSON or form data from any website form (CORS open, honeypot field
+  `website`). `/google`: Google Ads lead form webhook, authenticated by `google_key`. `/meta`: Facebook and Instagram
+  Lead Ads, signed by Meta (`X-Hub-Signature-256`); the lead is fetched from the Graph API and routed by page id.
+- Admins connect sources at Settings > Lead sources; the key is shown once and only its hash is stored. A source can
+  start a follow-up cadence, which only happens for people who gave consent and never for Google test leads.
+- A form from someone already in the workspace (same email or phone) is added to their lead and scores
+  "Enquires again" instead of making a duplicate. Meta and Google retries are de-duplicated by lead id.
+- Starting scores per channel and the event points are editable at Settings > Lead scoring.
+- `GET /api/cron/decay` (Vercel Cron, daily, `Authorization: Bearer $CRON_SECRET`) takes points off leads idle for
+  48 hours. Google Business Profile has no lead webhook any more, so Google leads come from Ads lead forms.
+
+Next: TeleCMI and call sentiment (Step 3), the cadence worker (Step 4) and
 the AI sidebar (Step 5). The plan is in the project's "StratOS build plan" doc.
 
 ## How tenancy and access work
@@ -53,9 +66,12 @@ an active member of it**, so a forged cookie resolves to no tenant and every pol
    `DATABASE_URL_UNPOOLED`.
 2. `cp .env.example .env.local`, fill it in, `npm install`, `npm run db:migrate`.
 3. Resend: verify your sending domain, create an API key, set `RESEND_API_KEY` and `EMAIL_FROM`.
-4. Vercel: import the repo, add the variables from `.env.example`, deploy. `NEXT_PUBLIC_PRODUCT_NAME` sets the
+4. Meta (for Lead Ads): in a Meta app with the `leads_retrieval` and `pages_manage_metadata` permissions, subscribe
+   the Page webhook `leadgen` field to `<site>/api/v1/webhooks/inbound/meta` with `META_VERIFY_TOKEN`, and set
+   `META_APP_SECRET` and a system user token in `META_SYSTEM_USER_TOKEN`.
+5. Vercel: import the repo, add the variables from `.env.example`, deploy. `NEXT_PUBLIC_PRODUCT_NAME` sets the
    white-label name.
-5. Open the app, sign in with your email, and create your workspace.
+6. Open the app, sign in with your email, and create your workspace.
 
 Local development: `EMAIL_PROVIDER=console` prints sign-in links in the terminal. `npm run dev`.
 

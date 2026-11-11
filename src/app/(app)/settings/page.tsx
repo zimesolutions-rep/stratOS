@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { INDUSTRY_LABEL, REGIME_LABEL, ROLE_LABEL, type MemberRole } from "@/lib/stratos/types";
@@ -27,7 +28,7 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Workspace" title="Settings" description="What your workspace was set up with. Editing arrives with lead sources and cadences." />
+      <PageHeader eyebrow="Workspace" title="Settings" description="What your workspace was set up with." actions={<><Link href="/settings/sources" className="btn-secondary">Lead sources</Link><Link href="/settings/scoring" className="btn-secondary">Edit scoring</Link></>} />
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card">
           <h2 className="h2">Workspace</h2>

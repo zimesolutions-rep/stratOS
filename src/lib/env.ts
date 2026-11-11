@@ -12,5 +12,11 @@ export const env = {
   emailProvider: () => (process.env.EMAIL_PROVIDER ?? "resend").toLowerCase(),
   resendApiKey: () => required("RESEND_API_KEY", process.env.RESEND_API_KEY),
   emailFrom: () => process.env.EMAIL_FROM ?? "StratOS <hello@zimesolutions.com>",
+  cronSecret: () => required("CRON_SECRET", process.env.CRON_SECRET),
+  metaAppSecret: () => required("META_APP_SECRET", process.env.META_APP_SECRET),
+  metaVerifyToken: () => required("META_VERIFY_TOKEN", process.env.META_VERIFY_TOKEN),
+  /** System-user token of the single developer Business account, with leads_retrieval on every client page. */
+  metaAccessToken: () => required("META_SYSTEM_USER_TOKEN", process.env.META_SYSTEM_USER_TOKEN),
+  metaGraphBaseUrl: () => (process.env.META_GRAPH_BASE_URL || "https://graph.facebook.com/v21.0").replace(/\/$/, ""),
   defaultCountryCode: () => (process.env.DEFAULT_COUNTRY_CODE ?? "91").replace(/\D/g, "") || "91",
 };
