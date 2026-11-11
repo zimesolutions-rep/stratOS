@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
-import { INDUSTRY_LABEL, MARKET_LABEL, REGIME_LABEL, ROLE_LABEL, type MemberRole } from "@/lib/stratos/types";
+import { INDUSTRY_LABEL, MARKET_LABEL, REGIME_LABEL, ROLE_LABEL, SCORE_EVENT_LABEL, SOURCE_LABEL, STEP_CHANNEL_LABEL, type LeadSource, type MemberRole } from "@/lib/stratos/types";
 import { getMe } from "@/lib/tenant";
 import { listStages } from "@/lib/leads/repo";
 
 export const metadata = { title: "Settings" };
 
-const HOSTING = { in: "India (Mumbai)", eu: "European Union", us: "United States" } as const;
-
-const RULE_LABEL = (k: string) => k.startsWith("source:") ? `Starting score: ${k.slice(7).replace(/_/g, " ")}` : k.replace(/_/g, " ");
+const RULE_LABEL = (k: string) => k.startsWith("source:")
+  ? `Starting score: ${SOURCE_LABEL[k.slice(7) as LeadSource] ?? k.slice(7)}`
+  : SCORE_EVENT_LABEL[k] ?? k.replace(/_/g, " ");
 
 /** Read-only for Step 1: what onboarding seeded. Editing comes with Steps 2 and 4. */
 export default async function SettingsPage() {
@@ -37,8 +37,7 @@ export default async function SettingsPage() {
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             {([["Name", t.name], ["Address", t.slug], ["Industry", INDUSTRY_LABEL[t.industry]],
                ["Customers in", t.customer_markets.map((m) => MARKET_LABEL[m]).join(", ")],
-               ["Privacy laws", t.compliance_regimes.map((r) => REGIME_LABEL[r]).join(", ")],
-               ["Data hosted in", HOSTING[t.data_region]], ["Currency", t.default_currency],
+               ["Privacy laws", t.compliance_regimes.map((r) => REGIME_LABEL[r]).join(", ")], ["Currency", t.default_currency],
                ["Retention", t.retention_days ? `${t.retention_days} days after a lead closes` : "Until erasure is requested"]] as const)
               .map(([k, v]) => <div key={k}><dt className="text-xs text-ink-3">{k}</dt><dd className="font-medium text-ink">{v}</dd></div>)}
           </dl>
@@ -66,7 +65,7 @@ export default async function SettingsPage() {
           <h2 className="h2">Lead scoring</h2>
           <table className="table">
             <thead><tr><th>Rule</th><th>Points</th></tr></thead>
-            <tbody>{rules.map((r) => <tr key={r.rule_key}><td className="capitalize">{RULE_LABEL(r.rule_key)}</td><td>{r.value > 0 && !r.rule_key.startsWith("source:") ? "+" : ""}{r.value}</td></tr>)}</tbody>
+            <tbody>{rules.map((r) => <tr key={r.rule_key}><td>{RULE_LABEL(r.rule_key)}</td><td>{r.value > 0 && !r.rule_key.startsWith("source:") ? "+" : ""}{r.value}</td></tr>)}</tbody>
           </table>
         </section>
         <section className="card lg:col-span-2">
@@ -74,7 +73,7 @@ export default async function SettingsPage() {
           <table className="table">
             <thead><tr><th>Cadence</th><th>Step</th><th>Channel</th><th>Wait</th><th>Message</th></tr></thead>
             <tbody>{steps.map((s) => (
-              <tr key={`${s.cadence}-${s.position}`}><td>{s.cadence}</td><td>{s.position}</td><td className="capitalize">{s.channel.replace("_", " ")}</td><td>{delay(s.delay_minutes)}</td><td className="text-xs">{s.body}</td></tr>
+              <tr key={`${s.cadence}-${s.position}`}><td>{s.cadence}</td><td>{s.position}</td><td>{STEP_CHANNEL_LABEL[s.channel] ?? s.channel}</td><td>{delay(s.delay_minutes)}</td><td className="text-xs">{s.body}</td></tr>
             ))}</tbody>
           </table>
         </section>
