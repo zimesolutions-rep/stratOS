@@ -39,7 +39,7 @@ async function resolve(userId: string): Promise<Omit<Me, "email" | "name"> | nul
   const m = list.find((x) => x.tenant_id === picked) ?? list[0];
   const db: Me["db"] = (fn) => asTenantUser(userId, m.tenant_id, fn);
   const tenant = await db(async (q) => (await q.query<Tenant>(
-    `select id, name, slug, industry, compliance_regimes, data_region, default_currency, timezone, retention_days
+    `select id, name, slug, industry, compliance_regimes, customer_markets, data_region, default_currency, timezone, retention_days
        from stratos.tenants where id = stratos.current_tenant_id()`)).rows[0]);
   if (!tenant) return null;
   return { userId, tenant, role: m.role, memberships: list, canWrite: canWrite(m.role), isAdmin: isAdminRole(m.role), db };
