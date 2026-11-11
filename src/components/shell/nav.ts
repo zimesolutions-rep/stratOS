@@ -1,4 +1,4 @@
-export type NavIcon = "dashboard" | "leads" | "pipeline" | "new" | "settings" | "sources" | "scoring";
+export type NavIcon = "dashboard" | "leads" | "pipeline" | "new" | "settings" | "sources" | "scoring" | "activity";
 export type NavItem = { href: string; label: string; icon: NavIcon; exact?: boolean };
 
 export const NAV: { section: string; items: NavItem[] }[] = [
@@ -19,5 +19,6 @@ export const ADMIN_NAV: { section: string; items: NavItem[] } = {
     { href: "/settings", label: "Settings", icon: "settings", exact: true },
     { href: "/settings/sources", label: "Lead sources", icon: "sources" },
     { href: "/settings/scoring", label: "Lead scoring", icon: "scoring" },
+    { href: "/settings/activity", label: "Activity log", icon: "activity" },
   ],
 };

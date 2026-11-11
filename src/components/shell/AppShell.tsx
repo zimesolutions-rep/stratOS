@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
-import { IconClose, IconCollapse, IconDashboard, IconExpand, IconGauge, IconInboundTray, IconLeads, IconMenu, IconPipeline, IconPlus, IconSettings } from "@/components/Icons";
+import { IconClose, IconCollapse, IconDashboard, IconExpand, IconGauge, IconHistory, IconInboundTray, IconLeads, IconMenu, IconPipeline, IconPlus, IconSettings } from "@/components/Icons";
 import { ADMIN_NAV, NAV, type NavItem } from "./nav";
 import { LiveClock } from "./LiveClock";
 import { ProfileMenu } from "./ProfileMenu";
 import { TenantSwitcher, type TenantOption } from "./TenantSwitcher";
 
-const ICONS = { dashboard: IconDashboard, leads: IconLeads, pipeline: IconPipeline, new: IconPlus, settings: IconSettings, sources: IconInboundTray, scoring: IconGauge };
+const ICONS = { dashboard: IconDashboard, leads: IconLeads, pipeline: IconPipeline, new: IconPlus, settings: IconSettings, sources: IconInboundTray, scoring: IconGauge, activity: IconHistory };
 const STORAGE_KEY = "stratos.sidebar.collapsed";
 
 export type ShellUser = {

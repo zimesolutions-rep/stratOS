@@ -4,8 +4,7 @@ import { toE164 } from "./phone";
 
 const optionalText = (max: number) => z.string().trim().max(max).optional().transform((v) => (v ? v : null));
 
-/** A lead typed in by a rep. Webhook ingestion (Step 2) gets its own per-source normalisers. */
-export const leadInput = z.object({
+const contactFields = {
   full_name: optionalText(160),
   email: z.union([z.literal(""), z.email("Enter a valid email")]).optional().transform((v) => (v ? v.toLowerCase() : null)),
   phone: z.string().optional().transform((v, ctx) => {
@@ -16,12 +15,20 @@ export const leadInput = z.object({
   }),
   company: optionalText(160),
   job_title: optionalText(120),
-  source: z.enum(LEAD_SOURCES).default("manual"),
-  stage_id: z.union([z.literal(""), z.uuid()]).optional().transform((v) => v || null),
   contract_value: z.union([z.literal(""), z.coerce.number().nonnegative("Value can't be negative")]).optional()
     .transform((v) => (v === "" || v === undefined ? null : v)),
+};
+const hasContact = (v: { full_name: string | null; email: string | null; phone: string | null }) =>
+  Boolean(v.full_name || v.email || v.phone);
+const contactMessage = { message: "Give at least a name, an email or a phone number" };
+
+/** A lead typed in by a rep. Webhook ingestion (Step 2) gets its own per-source normalisers. */
+export const leadInput = z.object({
+  ...contactFields,
+  source: z.enum(LEAD_SOURCES).default("manual"),
+  stage_id: z.union([z.literal(""), z.uuid()]).optional().transform((v) => v || null),
   consent_status: z.enum(CONSENT_STATUSES).default("unknown"),
-}).refine((v) => v.full_name || v.email || v.phone, { message: "Give at least a name, an email or a phone number" });
+}).refine(hasContact, contactMessage);
 
 export type LeadInput = z.output<typeof leadInput>;
 
@@ -31,3 +38,7 @@ export const leadUpdate = z.object({
   consent_status: z.enum(CONSENT_STATUSES).optional(),
 });
 export type LeadUpdate = z.output<typeof leadUpdate>;
+
+/** Editing a saved lead's contact details. Every field is sent; a blank one clears it. */
+export const leadDetails = z.object(contactFields).refine(hasContact, contactMessage);
+export type LeadDetails = z.output<typeof leadDetails>;
