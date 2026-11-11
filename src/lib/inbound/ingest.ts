@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { asService, type Db } from "@/lib/db";
-import type { LeadSource } from "@/lib/stratos/types";
+import { SOURCE_LABEL, type LeadSource } from "@/lib/stratos/types";
 import { hashToken } from "./tokens";
 import type { InboundLead } from "./normalize";
 
@@ -99,5 +99,5 @@ async function logEnquiry(db: Db, tenantId: string, leadId: string, lead: Inboun
   await db.query(
     `insert into stratos.interactions (tenant_id, lead_id, channel, direction, provider, body)
      values ($1, $2, 'note', 'inbound', 'manual', $3)`,
-    [tenantId, leadId, lead.message ? `Enquiry: ${lead.message}` : `New enquiry via ${lead.source.replace(/_/g, " ")}`]);
+    [tenantId, leadId, lead.message ? `Enquiry: ${lead.message}` : `New enquiry via ${SOURCE_LABEL[lead.source]}`]);
 }

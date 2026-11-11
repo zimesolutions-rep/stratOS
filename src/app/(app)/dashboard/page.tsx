@@ -31,7 +31,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     <>
       {welcome && (
         <div className="mb-6 rounded-[18px] bg-brand-soft p-4 text-sm text-brand-strong">
-          Your {INDUSTRY_LABEL[me.tenant.industry].toLowerCase()} workspace is ready, with pipeline stages, a starter cadence and lead scoring set up.
+          Your workspace is ready, with pipeline stages, a starter cadence and lead scoring set up for {INDUSTRY_LABEL[me.tenant.industry]}.
         </div>
       )}
       <PageHeader eyebrow={me.tenant.name} title="Dashboard" />

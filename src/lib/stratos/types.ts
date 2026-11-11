@@ -33,6 +33,14 @@ export const CONSENT_LABEL: Record<ConsentStatus, string> = {
   unknown: "Not recorded", granted: "Granted", withdrawn: "Withdrawn", erasure_requested: "Erasure requested",
 };
 
+/** Names for scoring events (rule keys that are not "source:…"). */
+export const SCORE_EVENT_LABEL: Record<string, string> = {
+  call_answered: "Picks up a call", call_missed: "Misses an outbound call", inbound_reply: "Replies",
+  re_enquiry: "Enquires again", sentiment_positive: "Positive call", sentiment_neutral: "Neutral call",
+  sentiment_negative: "Negative call", inactivity_48h: "Idle for 48 hours", stage_floor: "Moved to a new stage",
+};
+export const STEP_CHANNEL_LABEL: Record<string, string> = { whatsapp: "WhatsApp", sms: "SMS", email: "Email", call_task: "Call task" };
+
 /** Privacy laws a workspace can declare. HIPAA also turns on strict masking of health details before AI calls. */
 export const REGIMES = ["dpdp", "gdpr", "uk_gdpr", "ccpa", "hipaa", "uae_pdpl", "ksa_pdpl", "au_privacy", "pdpa_sg"] as const;
 export type Regime = (typeof REGIMES)[number];
