@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
@@ -7,13 +8,14 @@ import { getLead, listStages, scoreHistory } from "@/lib/leads/repo";
 import { CONSENT_LABEL, CONSENT_STATUSES, LEAD_STATUSES } from "@/lib/stratos/types";
 import { getMe } from "@/lib/tenant";
 import { updateLeadAction } from "../actions";
+import { LeadDetails } from "./LeadDetails";
 
 export const metadata = { title: "Lead" };
 
 const RULE_LABEL: Record<string, string> = {
   call_answered: "Picked up a call", call_missed: "Missed a call", inbound_reply: "Replied",
   sentiment_positive: "Positive call", sentiment_neutral: "Neutral call", sentiment_negative: "Negative call",
-  inactivity_48h: "No activity for 48 hours",
+  inactivity_48h: "No activity for 48 hours", re_enquiry: "Enquired again", stage_floor: "Moved to a new stage",
 };
 
 export default async function LeadPage({ params }: { params: Promise<{ id: string }> }) {
@@ -32,18 +34,14 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
 
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
         <div className="space-y-6">
-          <section className="card">
-            <h2 className="h2">Details</h2>
-            <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-              {([
-                ["Email", lead.email], ["Phone", lead.phone], ["Company", lead.company], ["Job title", lead.job_title],
-                ["Deal value", money(lead.contract_value, lead.currency)], ["Stage", stage?.name],
-                ["Created", dateTime(lead.created_at)], ["Last activity", dateTime(lead.last_activity_at)],
-              ] as const).map(([k, v]) => (
-                <div key={k}><dt className="text-xs text-ink-3">{k}</dt><dd className="font-medium text-ink">{v || "—"}</dd></div>
-              ))}
-            </dl>
-          </section>
+          <LeadDetails id={lead.id} currency={lead.currency} canEdit={me.canWrite && lead.consent_status !== "erasure_requested"}
+            lead={{ full_name: lead.full_name, email: lead.email, phone: lead.phone, company: lead.company,
+                    job_title: lead.job_title, contract_value: lead.contract_value }}
+            rows={[
+              ["Email", lead.email], ["Phone", lead.phone], ["Company", lead.company], ["Job title", lead.job_title],
+              ["Deal value", money(lead.contract_value, lead.currency)], ["Stage", stage?.name],
+              ["Created", dateTime(lead.created_at)], ["Last activity", dateTime(lead.last_activity_at)],
+            ]} />
 
           <section className="card">
             <h2 className="h2">Score history</h2>
@@ -99,6 +97,8 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
               </select>
               <button className="btn-secondary w-full">Update consent</button>
             </form>
+
+            {me.isAdmin && <Link href={`/settings/activity?lead=${lead.id}`} className="btn-secondary w-full">View activity log</Link>}
           </aside>
         )}
       </div>

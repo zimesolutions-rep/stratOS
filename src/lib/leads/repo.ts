@@ -1,6 +1,6 @@
 import type { Db } from "@/lib/db";
 import type { Lead, ScoreEvent, Stage } from "@/lib/stratos/types";
-import type { LeadInput, LeadUpdate } from "./schema";
+import type { LeadDetails, LeadInput, LeadUpdate } from "./schema";
 
 const LEAD_COLS = `id, full_name, email, phone, company, job_title, source, stage_id, status, owner_id, contract_value, currency,
   conversion_probability, baseline_probability, last_activity_at, consent_status, consent_updated_at, contains_phi, created_at`;
@@ -58,6 +58,15 @@ export async function updateLead(db: Db, id: string, patch: LeadUpdate): Promise
         consent_status = coalesce($4::stratos.consent_status, consent_status)
       where id = $1`,
     [id, patch.stage_id ?? null, patch.status ?? null, patch.consent_status ?? null]);
+}
+
+/** Contact details from the edit form. Phone and email are already normalised by the schema. */
+export async function updateLeadDetails(db: Db, id: string, d: LeadDetails): Promise<boolean> {
+  const { rowCount } = await db.query(
+    `update stratos.leads set full_name = $2, email = $3, phone = $4, company = $5, job_title = $6, contract_value = $7
+      where id = $1 and consent_status <> 'erasure_requested'`,
+    [id, d.full_name, d.email, d.phone, d.company, d.job_title, d.contract_value]);
+  return (rowCount ?? 0) > 0;
 }
 
 export async function pipelineSummary(db: Db) {
